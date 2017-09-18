@@ -1,5 +1,6 @@
 # Pawar-added
 .DS_Store
+firebaseServiceAccountKey.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -102,3 +103,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+*~
