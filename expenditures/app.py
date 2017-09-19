@@ -84,14 +84,6 @@ candidates = [
     },
 ]
 
-day_to_other_time = collections.OrderedDict(
-        [('second', (1/(24*60*60))),
-        ('minute', (1/(24*60))),
-        ('hour', (1/24)),
-        ('day', 1),
-        ('week', 7),
-        ('month', 30)]
-        )
 
 # how long our cached items last
 redisDuration = 3600 # one hour
@@ -115,13 +107,12 @@ def calculateSpentPerDay(days, total):
 def calculateSpentPerSecond(perDay):
     return perDay / 86400
 
-
-def getBestTimespanForSpend(spentPerDay, fact_amount):
-    for timespan, ratio in day_to_other_time.iteritems():
-        spentPerTime = spentPerDay * ratio
-        if spentPerTime >= fact_amount:
-            return timespan
-    return None
+# this just works because hours, minutes and seconds are easy to pluralize
+def plural(word, count):
+    res = word
+    if count > 1:
+        res += 's'
+    return res
 
 
 # convenience during development/testing
@@ -132,10 +123,10 @@ def clear():
 
     return 'cache cleared'
 
+
 @app.route('/expenditures/facts/random', methods=['GET'])
 @cross_origin()
 def get_random_fact():
-    global app, candidates, day_to_other_time
     # pick a random fact from the db
     # pick a random candidate and get their numbers
     # calculate stuff and return the text
@@ -148,29 +139,43 @@ def get_random_fact():
     fact_ref = db.reference('facts/%d'%rand_fact_id)
     rand_fact = fact_ref.get()
 
-    rand_cand = random.choice(candidates)
-    cand_expenditures = get_cand_expenditures(rand_cand['id'])
-    app.logger.info(str(cand_expenditures))
+    cand_expenditures = get_cand_expenditures('rauner')
 
     # get it before rounding
     spentPerDay = calculateSpentPerDay(float(cand_expenditures['spendingDays']),
             float(cand_expenditures['total']))
+    spentPerSecond = calculateSpentPerSecond(spentPerDay)
+    secondsPerFactUnit = float(rand_fact['amount']) / spentPerSecond
 
-    timespan = getBestTimespanForSpend(spentPerDay, float(rand_fact['amount']))
-    if timespan is None:
-        # seems like this shouldn't happen if we're picking the right facts, but may need to find
-        # a better thing to do here
-        text = 'We couldn\'t find a good timespan for this fact and candidate'
-    else:
-        text = '%s spends more in one %s than %s. Source: %s'%(
-                rand_cand['name'],
-                timespan,
-                rand_fact['item'],
-                rand_fact['source'])
+    mins, secs = divmod(secondsPerFactUnit, 60)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(hours, 24)
+
+    text = "#RaunerSpends the %s in"%rand_fact['item']
+    prevNum = False
+    if days:
+        text += " %d days"%days
+        prevNum = True
+    if hours:
+        if prevNum:
+            text += ','
+        text += " %dhrs"%hours
+        prevNum = True
+    if mins:
+        if prevNum:
+            text += ','
+        text += " %dmins"%mins
+        prevNum = True
+    if secs:
+        if prevNum:
+            text += ','
+        text += " %ds"%secs
+
+    text += " [%s]"%rand_fact['source']
+
+
     resp = {'text':text}
     return jsonify(resp)
-
-
 
 
 
