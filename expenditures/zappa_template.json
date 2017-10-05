@@ -13,6 +13,24 @@
         "project_name":"expenditures",
 	    "cors":true,
         "environment_variables": {
+		    "ENV":"dev"
+        }
+    },
+    "prod": {
+        "app_function": "app.app",
+        "aws_region": null,
+        "profile_name": null,
+        "project_name": "bin",
+        "runtime": "python3.6",
+        "s3_bucket": "pawar2018-zappa",
+        "timeout_seconds": 120,
+        "memory_size":128,
+        "keep_warm":false,
+	    "slim_handler":false,
+        "project_name":"expenditures",
+	    "cors":true,
+        "environment_variables": {
+		    "ENV":"prod"
         }
     }
 }

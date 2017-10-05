@@ -3,6 +3,10 @@
 # Specify the python and pip command paths
 PIP=pip3
 
+if [ -z $ENV ]; then
+    export ENV=dev
+fi
+
 # Install VirtualEnv for the project
 
 declare -a cmdArgs='([0]=$PIP [1]="install virtualenv")'
@@ -17,10 +21,10 @@ pip install -r expenditures/requirements.txt
 python appendFirebaseCert.py
 cd expenditures
 
-if zappa deploy; then
+if zappa deploy $ENV; then
     echo "Zappa Deploy Done"
 else
-    zappa update
+    zappa update $ENV
     echo "Zappa Update Done"
 fi
 

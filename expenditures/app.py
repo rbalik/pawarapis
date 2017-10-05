@@ -16,8 +16,16 @@ import logging
 
 import boto3
 dynamodb = boto3.resource('dynamodb')
-cache = dynamodb.Table('expenditures_cache')
-fact_oftheday_table = dynamodb.Table('fact_of_the_day')
+
+env_suffix=''
+env = os.environ.get('ENV')
+if env:
+    env_suffix = '-'+env
+else:
+    env_suffix = '-dev'
+
+cache = dynamodb.Table('expenditures_cache'+env_suffix)
+fact_oftheday_table = dynamodb.Table('fact_of_the_day'+env_suffix)
 
 
 from candidates import candidates
